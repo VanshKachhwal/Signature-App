@@ -43,8 +43,8 @@ class _HomePageState extends State<HomePage> {
     return showDialog(context: context, builder: (context)
     {
       return AlertDialog(
-          contentPadding: EdgeInsets.all(10.0),
-          content: TextField(
+        contentPadding: EdgeInsets.all(10.0),
+        content: TextField(
           controller: t2,
           decoration: InputDecoration(
             hintText: "Add Title",
@@ -88,6 +88,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   List<MyListItem> listItems = [];
+  List<MyListItem> listItemsC = [];
   SharedPreferences sharedPreferences;
 
   @override
@@ -106,6 +107,7 @@ class _HomePageState extends State<HomePage> {
   void addNewItemToList(String title){
     setState(() {
       listItems.add(MyListItem(title));
+      listItemsC = listItems;
       saveData();
     });
 
@@ -118,19 +120,20 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: getAppBar(),
       body: new ListView.builder(
-          itemCount: listItems.length,
+          itemCount: listItemsC.length + 1,
           itemBuilder: (context, int index){
-            return new Dismissible(
-                key: new Key(listItems[index].title),
+            return index == 0? searchBar() : new Dismissible(
+                key: new Key(listItems[index-1].title),
                 onDismissed: (direction){
                   setState(() {
-                    listItems.removeAt(index);
+                    listItems.removeAt(index-1);
+                    listItemsC = listItems;
                     saveData();
                   });
 
                   Scaffold.of(context).showSnackBar(new SnackBar(
-                      content: new Text("Item Deleted"),
-                      duration: Duration(seconds:1),
+                    content: new Text("Item Deleted"),
+                    duration: Duration(seconds:1),
                   ));
                 },
                 child: Padding(
@@ -139,12 +142,12 @@ class _HomePageState extends State<HomePage> {
                     child: ListTile(
                       leading: Icon(Icons.landscape),
                       trailing: Icon(Icons.arrow_right),
-                      title: Text(listItems[index].title,
+                      title: Text(listItemsC[index-1].title,
                         style: TextStyle(
                             fontWeight: FontWeight.w500
                         ),),
                       onTap: () {
-                        String titleBar = listItems[index].title;
+                        String titleBar = listItemsC[index-1].title;
                         Navigator.push(context,
                             MaterialPageRoute(builder: (context) => DrawingScreen(value: titleBar)));
                       },
@@ -169,6 +172,26 @@ class _HomePageState extends State<HomePage> {
 
   }
 
+  searchBar(){
+    return Padding(
+        padding: const EdgeInsets.all(3.0),
+      child: TextField(
+        decoration: InputDecoration(
+          hintText: 'Search...'
+        ),
+        onChanged: (text){
+          text = text.toLowerCase();
+          setState(() {
+            listItemsC = listItems.where((element) {
+              var elementTitle = element.title.toLowerCase();
+              return elementTitle.contains(text);
+            }).toList();
+          });
+        },
+      ),
+    );
+  }
+
   getAppBar() {
     return PreferredSize(
         preferredSize: Size.fromHeight(50),
@@ -191,18 +214,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   void saveData(){
-    List<String> spList = listItems.map((item) => json.encode(item.toMap())).toList();
+    List<String> spList = listItemsC.map((item) => json.encode(item.toMap())).toList();
     sharedPreferences.setStringList('listItems', spList);
   }
 
   void loadData(){
     List<String> spList = sharedPreferences.getStringList('listItems');
-    listItems = spList.map((item) => MyListItem.fromMap(json.decode(item))).toList();
+    listItemsC = spList.map((item) => MyListItem.fromMap(json.decode(item))).toList();
     setState(() {
 
     });
   }
 }
-
-
-
