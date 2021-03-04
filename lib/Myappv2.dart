@@ -123,11 +123,11 @@ class _HomePageState extends State<HomePage> {
           itemCount: listItemsC.length + 1,
           itemBuilder: (context, int index){
             return index == 0? searchBar() : new Dismissible(
-                key: new Key(listItems[index-1].title),
+                key: new Key(listItemsC[index-1].title),
                 onDismissed: (direction){
                   setState(() {
-                    listItems.removeAt(index-1);
-                    listItemsC = listItems;
+                    listItemsC.removeAt(index-1);
+                    listItems = listItemsC;
                     saveData();
                   });
 
